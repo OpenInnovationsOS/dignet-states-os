@@ -13,3 +13,18 @@ A full-stack OS enabling legally recognized **Digital States** and **Network Sta
 ---
 
 ## 🗂️ Repository Structure
+dignet-states-os/
+├── kernel/          # Constitution Kernel (Rust)
+├── consensus/       # SCP: Sovereign Consensus Protocol
+├── identity/        # SovereignID — ZK-native DID system
+├── governance/      # LexOS: Law Engine, Voting, Courts
+├── economy/         # EconOS: Treasury, DSTB, Bonds
+├── services/        # Health, Land, Education, etc.
+├── clients/         # Mobile, Desktop, Web, AR/VR
+├── contracts/       # Smart contracts (Solidity, Move)
+├── devops/          # IaC: Terraform, Helm, CI
+└── docs/            # Full documentation suite
+
+
+## 🚀 Quickstart
+Coming soon — CLI will be added in Q1 2026!
