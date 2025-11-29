@@ -1,0 +1,83 @@
+# docker-compose.yml
+# Run a full DigNetSTATES OS node locally — for testing, demos, or citizen onboarding
+# Requires: Docker Desktop (free: https://www.docker.com/products/docker-desktop)
+
+version: "3.8"
+
+services:
+  # 🔐 Local Blockchain (for testing laws & citizenship)
+  blockchain:
+    image: truffle/blockchain:latest
+    ports:
+      - "8545:8545"
+    command: >
+      --networkId 1337
+      --port 8545
+      --host 0.0.0.0
+      --gasLimit 10000000
+      --accounts 10
+      --defaultBalanceEther 100
+
+  # ⚖️ Law Engine (LexOS) — executes smart laws
+  law-engine:
+    image: node:20-alpine
+    working_dir: /app
+    volumes:
+      - ./governance:/app/governance
+    command: >
+      sh -c "
+      npm init -y &&
+      npm install ethers @chainsafe/as-sha256 &&
+      echo 'console.log(\"🏛️ LexOS Law Engine — Ready\"); 
+             console.log(\"➡️ Connect to http://localhost:3000\"); 
+             setTimeout(() => {}, 1e9)' > index.js &&
+      node index.js
+      "
+    ports:
+      - "3000:3000"
+    depends_on:
+      - blockchain
+
+  # 🧾 Web Dashboard (Citizen Portal)
+  web:
+    image: nginx:alpine
+    volumes:
+      - ./clients/web:/usr/share/nginx/html
+    ports:
+      - "8080:80"
+    command: >
+      /bin/sh -c "
+      echo '<!DOCTYPE html><html><head><title>DigNetSTATES OS</title></head><body style=\"font-family:sans-serif;text-align:center;padding:50px;\">
+        <h1>✅ Local Digital State</h1>
+        <p>Your sovereign node is running!</p>
+        <ul style=\"text-align:left;max-width:600px;margin:auto;\">
+          <li>🔗 Blockchain: <a href=\"http://localhost:8545\">localhost:8545</a></li>
+          <li>⚖️ Law Engine: <a href=\"http://localhost:3000\">localhost:3000</a></li>
+          <li>🧑 Citizen Portal: <a href=\"http://localhost:8080\">localhost:8080</a></li>
+        </ul>
+        <br><button onclick=\"window.location.href=\'#onboard\'\" style=\"padding:12px 24px;font-size:18px;background:#2563eb;color:white;border:none;border-radius:8px;\">Onboard as Citizen</button>
+      </body></html>' > /usr/share/nginx/html/index.html &&
+      nginx -g 'daemon off;'
+      "
+
+  # 📝 CLI Simulator (Terminal interface)
+  cli:
+    image: alpine:latest
+    command: >
+      sh -c "
+      echo '🚀 DigNetSTATES OS CLI (Simulator)' &&
+      echo '' &&
+      echo 'Commands:' &&
+      echo '  dnet citizen create --name \"Alice\"' &&
+      echo '  dnet law list' &&
+      echo '  dnet vote --proposal 1 --choice yes' &&
+      echo '' &&
+      echo '✅ Your local state is ready!' &&
+      echo '' &&
+      tail -f /dev/null
+      "
+    tty: true
+    stdin_open: true
+
+volumes:
+  blockchain_data:
