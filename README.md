@@ -28,3 +28,13 @@ dignet-states-os/
 
 ## 🚀 Quickstart
 Coming soon — CLI will be added in Q1 2026!
+
+## 🐳 Run Your Own Digital State Locally
+
+1. Install [Docker Desktop](https://www.docker.com/products/docker-desktop) (free)
+2. Open terminal (Mac: Terminal, Windows: PowerShell)
+3. Run:
+   ```bash
+   git clone https://github.com/YOUR-USERNAME/dignet-states-os.git
+   cd diginet-states-os
+   docker compose up
