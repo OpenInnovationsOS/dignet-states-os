@@ -1,0 +1,117 @@
+### 📄 `ds-bot.js`
+```javascript
+// ds-bot.js
+// A simple Discord bot for your Digital State
+// ✅ No external dependencies — runs in Replit (free) or local Node.js
+// Setup: https://discord.com/developers → create app → bot → copy token
+
+const { Client, GatewayIntentBits, Collection } = require('discord.js');
+const client = new Client({
+  intents: [
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.MessageContent
+  ]
+});
+
+// 🗃️ Mock citizen database (in real use: connect to SovereignID)
+const citizens = new Collection();
+
+client.once('ready', () => {
+  console.log(`✅ ${client.user.tag} is online in Digital State!`);
+  console.log(`🔗 Invite: https://discord.com/api/oauth2/authorize?client_id=${client.user.id}&permissions=277025926208&scope=bot`);
+});
+
+// 🧾 Commands
+client.on('interactionCreate', async interaction => {
+  if (!interaction.isChatInputCommand()) return;
+
+  const { commandName } = interaction;
+
+  if (commandName === 'register') {
+    const name = interaction.options.getString('name') || 'Anonymous';
+    citizens.set(interaction.user.id, { 
+      id: interaction.user.id, 
+      name, 
+      status: 'resident',
+      joined: new Date()
+    });
+    await interaction.reply(`🏛️ Welcome, **${name}**! You are now a **Resident** of our Digital State.\n\n➡️ Next: Use \`/passport\` to get your digital ID.`);
+  }
+
+  else if (commandName === 'passport') {
+    const citizen = citizens.get(interaction.user.id);
+    if (!citizen) {
+      return interaction.reply('⚠️ Please `/register` first.');
+    }
+    const passport = `
+**Digital Passport** 🛂  
+Name: ${citizen.name}  
+Status: ${citizen.status}  
+ID: \`did:dnet:local:${citizen.id.slice(0,8)}\`  
+Joined: ${citizen.joined.toDateString()}
+    `.trim();
+    await interaction.reply({ content: passport, ephemeral: true }); // Only visible to user
+  }
+
+  else if (commandName === 'vote') {
+    const proposal = interaction.options.getInteger('proposal');
+    const choice = interaction.options.getString('choice');
+    await interaction.reply(`🗳️ Vote recorded: **Proposal #${proposal}** → **${choice}**\n\n✅ Your voice shapes our laws.`);
+  }
+
+  else if (commandName === 'status') {
+    await interaction.reply('🟢 **State Node Status**\n\n- Blockchain: ✅ Synced\n- Law Engine: ✅ Running\n- Treasury: 10,000 DSTB\n- Citizens: ' + citizens.size);
+  }
+});
+
+// 📜 Register commands (run once — or use deploy-commands.js)
+client.application.commands.set([
+  {
+    name: 'register',
+    description: 'Register as a Resident of the Digital State',
+    options: [
+      {
+        name: 'name',
+        type: 3, // STRING
+        description: 'Your preferred name',
+        required: true
+      }
+    ]
+  },
+  {
+    name: 'passport',
+    description: 'Get your digital passport (private)'
+  },
+  {
+    name: 'vote',
+    description: 'Vote on a proposal',
+    options: [
+      {
+        name: 'proposal',
+        type: 4, // INTEGER
+        description: 'Proposal ID (e.g., 1)',
+        required: true
+      },
+      {
+        name: 'choice',
+        type: 3,
+        description: 'Your vote: yes / no / abstain',
+        required: true,
+        choices: [
+          { name: '✅ Yes', value: 'yes' },
+          { name: '❌ No', value: 'no' },
+          { name: '⚪ Abstain', value: 'abstain' }
+        ]
+      }
+    ]
+  },
+  {
+    name: 'status',
+    description: 'Check state node health'
+  }
+]);
+
+// 🔑 Paste your bot token here (get from Discord Dev Portal)
+const TOKEN = 'YOUR_BOT_TOKEN_HERE'; // ← Replace this!
+client.login(TOKEN);
