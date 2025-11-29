@@ -1,0 +1,19 @@
+name: CI Check
+
+on: [push, pull_request]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check structure
+        run: |
+          echo "✅ kernel/ exists" && test -d kernel
+          echo "✅ identity/ exists" && test -d identity
+          echo "✅ contracts/solidity/Citizenship.sol exists" && test -f contracts/solidity/Citizenship.sol
+      - name: Validate Solidity
+        run: |
+          sudo npm install -g solc
+          solc --version
+          solc --ast-json contracts/solidity/Citizenship.sol > /dev/null && echo "✅ Solidity compiles"
